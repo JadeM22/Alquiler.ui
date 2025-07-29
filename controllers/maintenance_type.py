@@ -5,8 +5,9 @@ from bson import ObjectId
 
 type_coll = get_collection("maintenance_types")
 
-# ✅ Obtener todos los tipos de mantenimiento activos
+# Lista todos los tipos de mantenimiento activos
 async def get_all_maintenance_types() -> list[Maintenance_Type]:
+    """Obtiene todos tipos de mantenimientos (admin ve todos, usuario solo los suyos)."""
     try:
         types = []
         for doc in type_coll.find({"active": True}):
@@ -15,10 +16,12 @@ async def get_all_maintenance_types() -> list[Maintenance_Type]:
             types.append(Maintenance_Type(**doc))
         return types
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error obteniendo tipos de mantenimiento: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error obteniendo los tipos de mantenimiento: {str(e)}")
 
-# ✅ Obtener un tipo de mantenimiento por ID
+
+# Lista un tipo de mantenimiento en especifico
 async def get_maintenance_type_by_id(type_id: str) -> Maintenance_Type:
+    """Obtiene un tipo de mantenimiento (admin ve todos, usuario solo los suyos)."""
     try:
         doc = type_coll.find_one({"_id": ObjectId(type_id), "active": True})
         if not doc:
@@ -27,10 +30,12 @@ async def get_maintenance_type_by_id(type_id: str) -> Maintenance_Type:
         del doc["_id"]
         return Maintenance_Type(**doc)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error obteniendo tipo de mantenimiento: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error obteniendo el tipo de mantenimiento: {str(e)}")
 
-# ✅ Crear un nuevo tipo de mantenimiento
+
+# Crear un nuevo tipo de mantenimiento
 async def create_maintenance_type(m_type: Maintenance_Type) -> Maintenance_Type:
+    """Crea un nuevo tipo de mantenimiento (solo administradores)."""
     try:
         m_dict = m_type.model_dump(exclude={"id"})
 
@@ -46,8 +51,10 @@ async def create_maintenance_type(m_type: Maintenance_Type) -> Maintenance_Type:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creando tipo de mantenimiento: {str(e)}")
 
-# ✅ Actualizar un tipo de mantenimiento
+
+# Actualizar un tipo de mantenimiento
 async def update_maintenance_type(type_id: str, m_type: Maintenance_Type) -> Maintenance_Type:
+    """Actualiza un tipo de mantenimiento (solo administradores)."""
     try:
         m_dict = m_type.model_dump(exclude={"id"})
         result = type_coll.update_one({"_id": ObjectId(type_id)}, {"$set": m_dict})
@@ -55,10 +62,12 @@ async def update_maintenance_type(type_id: str, m_type: Maintenance_Type) -> Mai
             raise HTTPException(status_code=404, detail="Tipo de mantenimiento no encontrado")
         return await get_maintenance_type_by_id(type_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error actualizando tipo de mantenimiento: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error actualizando el tipo de mantenimiento: {str(e)}")
 
-# ✅ Desactivar un tipo de mantenimiento
+
+# Desactivar un tipo de mantenimiento
 async def deactivate_maintenance_type(type_id: str) -> Maintenance_Type:
+    """Actualiza un tipo de mantenimiento (solo administradores)."""
     try:
         result = type_coll.update_one({"_id": ObjectId(type_id)}, {"$set": {"active": False}})
         if result.matched_count == 0:

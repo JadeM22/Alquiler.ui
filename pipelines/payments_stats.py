@@ -1,11 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import HTTPException
 from utils.mongodb import get_collection
 
-router = APIRouter()
-payments_coll = get_collection("pays")  # 🔹 Unificado con 'pays'
+payments_coll = get_collection("pays")
 
-@router.get("/payments/stats")
-async def get_payments_stats():
+
+async def get_payments_stats_pipeline():
+    """Pipeline que agrupa pagos y devuelve estadísticas por contrato."""
     try:
         pipeline = [
             {
@@ -26,7 +26,6 @@ async def get_payments_stats():
                 }
             }
         ]
-        stats = list(payments_coll.aggregate(pipeline))
-        return stats
+        return list(payments_coll.aggregate(pipeline))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error obteniendo estadísticas: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error ejecutando pipeline de estadísticas: {str(e)}")

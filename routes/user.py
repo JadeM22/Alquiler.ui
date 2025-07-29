@@ -11,24 +11,24 @@ from controllers.users import (
 
 router = APIRouter()
 
-# --- POST /users (solo admin) ---
+
 @router.post("/users", response_model=User)
 @validateadmin
 async def create_user_endpoint(request: Request, user: UserCreate):
     return await create_user_admin(request, user)
 
-# --- POST /login ---
+
 @router.post("/login")
 async def login_endpoint(user: Login):
     return await login(user)
 
-# --- GET /users/{user_id} (solo admin) ---
+
 @router.get("/users/{user_id}", response_model=User)
 @validateadmin
 async def get_user_endpoint(request: Request, user_id: str):
     return await get_user_by_id_admin(request, user_id)
 
-# --- PUT /users (usuario autenticado actualiza su perfil) ---
+
 @router.put("/users", response_model=User)
 @validateuser
 async def update_user_endpoint(request: Request, user: UserUpdate):

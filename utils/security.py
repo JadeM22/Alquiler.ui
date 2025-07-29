@@ -63,7 +63,7 @@ def validateuser(func):
             active = payload.get("active")
             exp = payload.get("exp")
             user_id = payload.get("id")
-            admin = payload.get("admin", False)  # ✅ extraer admin del token
+            admin = payload.get("admin", False) 
 
             if email is None:
                 raise HTTPException(status_code=401, detail="Token Invalid")
@@ -74,11 +74,11 @@ def validateuser(func):
             if not active:
                 raise HTTPException(status_code=401, detail="Inactive user")
 
-            # ✅ guardar en request.state
+            #  guardar en request.state
             request.state.email = email
             request.state.full_name = full_name
             request.state.id = user_id
-            request.state.admin = admin  # ✅ ahora se asigna correctamente
+            request.state.admin = admin  
 
         except PyJWTError:
             raise HTTPException(status_code=401, detail="Invalid token or expired token")
@@ -134,7 +134,7 @@ def validateadmin(func):
     return wrapper
 
 
-# Funciones para FastAPI Dependency Injection
+# Funciones para FastAPI 
 def validate_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
     """Validar token JWT para usuarios autenticados - Para usar con Depends()"""
     token = credentials.credentials

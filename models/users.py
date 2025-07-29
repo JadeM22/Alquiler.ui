@@ -30,6 +30,11 @@ class User(BaseModel):
         description="Estado activo de usuario"
     )
 
+    active: bool = Field(
+        default=False,
+        description="Estado activo de usuario"
+    )
+
     password: Optional [str] = Field(
         min_length=8,
         max_length=64,
@@ -49,8 +54,7 @@ class User(BaseModel):
         return value
     
 class UserCreate(User):
-    password: str  # obligatorio (sobrescribe el Optional de User)
-
+    password: str  
 class UserUpdate(User):
-    password: Optional[str] = None  # opcional para actualizaciones
+    password: Optional[str] = None 
 

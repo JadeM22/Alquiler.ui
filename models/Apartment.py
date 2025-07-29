@@ -27,7 +27,7 @@ class Apartment(BaseModel):
         examples=["https://mi-sitio.com/fotos/apartamento1.jpg"]
     )
 
-    enabled: bool = Field(
+    active: bool = Field(
         default=True,
         description="Estado activo del apartamento"
     )

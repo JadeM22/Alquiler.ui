@@ -5,10 +5,10 @@ from models.maintenance import Maintenance
 
 maintenance_coll = get_collection("maintenance")
 type_coll = get_collection("maintenance_types")
-contracts_coll = get_collection("contracts")  # Necesario para saber qué contratos son del usuario
+contracts_coll = get_collection("contracts")  
 
 
-# 🔹 Función auxiliar para verificar si el mantenimiento pertenece al usuario
+# Función auxiliar para verificar si el mantenimiento pertenece al usuario
 def maintenance_belongs_to_user(maintenance_doc, user_id: str) -> bool:
     contract_id = maintenance_doc.get("id_Contract")
     if not contract_id:
@@ -17,8 +17,9 @@ def maintenance_belongs_to_user(maintenance_doc, user_id: str) -> bool:
     return contract and str(contract.get("id_User")) == str(user_id)
 
 
-# ✅ GET todos los mantenimientos
+# Lista todos los mantenimientos
 async def get_all_maintenances(request: Request) -> list[Maintenance]:
+    """Obtiene todos los mantenimientos (admin ve todos, usuario solo los suyos)."""
     try:
         user_id = request.state.id
         admin = getattr(request.state, "admin", False)
@@ -65,8 +66,9 @@ async def get_all_maintenances(request: Request) -> list[Maintenance]:
 
 
 
-# ✅ GET mantenimiento por ID (solo admin o dueño del contrato)
+# Lista un mantenimiento en especifico
 async def get_maintenance_by_id(request: Request, maintenance_id: str) -> Maintenance:
+    """Obtiene un mantenimiento en especifico (admin ve todos, usuario solo los suyos)."""
     try:
         user_id = request.state.id
         admin = getattr(request.state, "admin", False)
@@ -89,8 +91,10 @@ async def get_maintenance_by_id(request: Request, maintenance_id: str) -> Mainte
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error obteniendo mantenimiento: {str(e)}")
     
-# ✅ POST crear mantenimiento (solo admin)
+
+# Crea un nuevo mantenimiento
 async def create_maintenance(request: Request, m: Maintenance) -> Maintenance:
+    """Crea un nuevo mantenimiento (solo administradores)."""
     try:
         if not getattr(request.state, "admin", False):
             raise HTTPException(status_code=403, detail="Solo administradores pueden crear mantenimientos")
@@ -113,8 +117,10 @@ async def create_maintenance(request: Request, m: Maintenance) -> Maintenance:
         raise HTTPException(status_code=500, detail=f"Error creando mantenimiento: {str(e)}")
 
 
-# ✅ PUT actualizar mantenimiento (solo admin)
+
+#  actualizar mantenimiento 
 async def update_maintenance(request: Request, maintenance_id: str, m: Maintenance) -> Maintenance:
+    """Actualiza un mantenimiento (solo administradores)."""
     try:
         if not getattr(request.state, "admin", False):
             raise HTTPException(status_code=403, detail="Solo administradores pueden actualizar mantenimientos")
@@ -136,8 +142,9 @@ async def update_maintenance(request: Request, maintenance_id: str, m: Maintenan
         raise HTTPException(status_code=500, detail=f"Error actualizando mantenimiento: {str(e)}")
 
 
-# ✅ DELETE desactivar mantenimiento (solo admin)
+# desactivar mantenimiento
 async def deactivate_maintenance(request: Request, maintenance_id: str) -> Maintenance:
+    """Desactiva un mantenimiento (solo administradores)."""
     try:
         if not getattr(request.state, "admin", False):
             raise HTTPException(status_code=403, detail="Solo administradores pueden desactivar mantenimientos")

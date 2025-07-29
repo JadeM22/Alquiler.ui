@@ -22,8 +22,9 @@ firebase_admin.initialize_app(cred)
 load_dotenv()
 coll = get_collection("users")
 
-# --- Crear nuevo usuario (solo admin) ---
+# Crear nuevo usuario 
 async def create_user_admin(request: Request, user: UserCreate) -> User:
+    """Crea un nuevo usuario (solo administradores)."""
     try:
         if not getattr(request.state, "admin", False):
             raise HTTPException(status_code=403, detail="Solo administradores pueden crear usuarios")
@@ -48,7 +49,8 @@ async def create_user_admin(request: Request, user: UserCreate) -> User:
         logger.error(f"Error creando usuario: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error creando usuario: {str(e)}")
 
-# --- Login de usuario ---
+
+# Login de usuario
 async def login(user: Login) -> dict:
     api_key = os.getenv("FIREBASE_API_KEY")
     url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
@@ -87,8 +89,10 @@ async def login(user: Login) -> dict:
         )
     }
 
-# --- Obtener usuario por ID (solo admin) ---
+
+# Lista un usuario en especifico
 async def get_user_by_id_admin(request: Request, user_id: str) -> User:
+    """Obtiene los datos de un usuario (solo administradores)."""
     try:
         if not getattr(request.state, "admin", False):
             raise HTTPException(status_code=403, detail="Solo administradores pueden consultar usuarios")
@@ -104,8 +108,10 @@ async def get_user_by_id_admin(request: Request, user_id: str) -> User:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error obteniendo usuario: {str(e)}")
 
-# --- Actualizar perfil del usuario autenticado ---
+
+# Actualizar perfil del usuario autenticado 
 async def update_user_profile(request: Request, user_update: UserUpdate) -> User:
+    """Actualiza los datos de un usuario (admin todos, usuario solo los suyos)."""
     try:
         user_id = request.state.id  # ID desde JWT
         existing = coll.find_one({"_id": ObjectId(user_id)})
@@ -114,24 +120,24 @@ async def update_user_profile(request: Request, user_update: UserUpdate) -> User
 
         update_data = user_update.model_dump(exclude_unset=True, exclude={"id", "admin"})
 
-        # --- Si hay password, actualizar en Firebase y en Mongo ---
+        #  Si hay password, actualizar en Firebase y en Mongo 
         if "password" in update_data and update_data["password"]:
             try:
-                # 🔹 Actualiza en Firebase si tienes el UID guardado
+                # Actualiza en Firebase si tienes el UID guardado
                 if existing.get("firebase_uid"):
                     firebase_auth.update_user(existing["firebase_uid"], password=update_data["password"])
             except Exception as e:
                 logger.warning(f"No se pudo actualizar la contraseña en Firebase: {e}")
 
-            # 🔹 Hashear y guardar en Mongo
+            # Hashear y guardar en Mongo
             hashed = bcrypt.hashpw(update_data["password"].encode("utf-8"), bcrypt.gensalt())
             update_data["password"] = hashed.decode("utf-8")  # Guardar hasheada
 
-        # --- Actualizar en Mongo ---
+        # Actualizar en Mongo
         if update_data:
             coll.update_one({"_id": ObjectId(user_id)}, {"$set": update_data})
 
-        # --- Retornar usuario actualizado ---
+        # Retornar usuario actualizado 
         updated = coll.find_one({"_id": ObjectId(user_id)})
         updated["id"] = str(updated["_id"])
         del updated["_id"]

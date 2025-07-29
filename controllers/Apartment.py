@@ -5,7 +5,9 @@ from bson import ObjectId
 
 coll = get_collection("apartments")
 
+# Crea un nuevo apartamento
 async def create_Apartment(apartment: Apartment) -> Apartment:
+    """Crea un nuevo apartamento (solo administradores)."""
     try:
         # Normalizar número de apartamento
         apartment.number = apartment.number.strip().lower()
@@ -30,7 +32,9 @@ async def create_Apartment(apartment: Apartment) -> Apartment:
         raise HTTPException(status_code=500, detail=f"Error creando apartamento: {str(e)}")
 
 
+# Desactiva un apartamento 
 async def deactivate_Apartment(apartment_id: str) -> Apartment:
+    """Desactiva un apartamento (solo administradores)."""
     try:
         # Intentamos actualizar el campo enabled a False
         result = coll.update_one(
@@ -49,7 +53,9 @@ async def deactivate_Apartment(apartment_id: str) -> Apartment:
         raise HTTPException(status_code=500, detail=f"Error desactivando apartamento: {str(e)}")
 
 
+#Lista los apartamentos 
 async def get_Apartment() -> list[Apartment]:
+    """Obtiene todos los apartamentos (publico)."""
     try:
         apartments = []
         for doc in coll.find():
@@ -66,7 +72,9 @@ async def get_Apartment() -> list[Apartment]:
         raise HTTPException(status_code=500, detail=f"Error obteniendo apartamentos: {str(e)}")
 
 
+#lista un apartamento en especifico
 async def get_Apartment_id(apartment_id: str) -> Apartment:
+    """Obtiene un apartamento en especifico (admin ve todos, usuario solo los suyos)."""
     try:
         doc = coll.find_one({"_id": ObjectId(apartment_id)})
         if not doc:
@@ -84,7 +92,10 @@ async def get_Apartment_id(apartment_id: str) -> Apartment:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error obteniendo apartamento: {str(e)}")
 
+
+# Actualiza un apartamento en especifico
 async def update_Apartment(apartment_id: str, apartment: Apartment) -> Apartment:
+    """Actualiza los datos de un apartamento (Solo administradores)."""
     try:
         # Normalizamos el número a minúsculas
         apartment.number = apartment.number.strip().lower()
