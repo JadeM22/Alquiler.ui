@@ -2,31 +2,35 @@ from fastapi import APIRouter, Request
 from models.contract import Contract
 from utils.security import validateuser, validateadmin
 from controllers.contract import (
-    get_Contracts,
-    create_Contract,
-    get_Contract_by_id,
-    update_Contract
+    get_contracts,
+    create_contract,
+    get_contract_by_id,
+    update_contract
 )
 
 router = APIRouter()
 
-@router.get("/contratos", response_model=list[Contract])
+# ------- CRUD -------
+@router.get("/contracts", response_model=list[Contract])
 @validateadmin
 async def read_contracts(request: Request):
-    return await get_Contracts(request)
+    """Obtiene todos los contratos (solo admin)"""
+    return await get_contracts(request)
 
-@router.post("/contratos", response_model=Contract)
+@router.post("/contracts", response_model=Contract)
 @validateadmin
 async def create_contract_endpoint(request: Request, contract: Contract):
-    return await create_Contract(request, contract)
+    """Crea un contrato (solo admin)"""
+    return await create_contract(request, contract)
 
-@router.get("/contract/{contract_id}", response_model=Contract)
+@router.get("/contracts/{contract_id}", response_model=Contract)
 @validateuser
 async def get_contract_by_id_endpoint(request: Request, contract_id: str) -> Contract:
-    return await get_Contract_by_id(contract_id)
+    """Obtiene un contrato por ID (usuario solo los suyos)"""
+    return await get_contract_by_id(request, contract_id)
 
-
-@router.put("/contratos/{contract_id}", response_model=Contract)
+@router.put("/contracts/{contract_id}", response_model=Contract)
 @validateadmin
 async def update_contract_endpoint(request: Request, contract_id: str, contract: Contract):
-    return await update_Contract(request, contract_id, contract)
+    """Actualiza un contrato existente (solo admin)"""
+    return await update_contract(request, contract_id, contract)

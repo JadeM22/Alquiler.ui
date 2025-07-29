@@ -1,16 +1,15 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from typing import Optional
-import re
 from datetime import datetime
 
 class Pay(BaseModel):
     id: Optional[str] = Field(
         default=None,
-        description="MongoDB ID - Se genera automáticamente desde el _id de MongoDB"
+        description="MongoDB ID generado automáticamente desde _id"
     )
 
     id_Contract: str = Field(
-        description="ID del conttrato",
+        description="ID del contrato asociado",
         examples=["507f1f77bcf86cd799439012"]
     )
 
@@ -26,12 +25,11 @@ class Pay(BaseModel):
     )
 
     id_Pyment_Method: str = Field(
-        description="ID del metodo de pago",
+        description="ID del método de pago",
         examples=["507f1f77bcf86cd799439012"]
     )
-    
+
     is_paid: bool = Field(
         default=True,
-        description="esta pagado o no "
+        description="Indica si el pago está realizado"
     )
-
