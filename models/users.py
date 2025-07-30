@@ -30,7 +30,7 @@ class User(BaseModel):
         description="Estado activo de usuario"
     )
 
-    active: bool = Field(
+    admin: bool = Field(
         default=False,
         description="Estado activo de usuario"
     )
