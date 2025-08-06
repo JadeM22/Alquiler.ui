@@ -44,3 +44,5 @@ docs/
 # Configuration files
 *.cfg
 *.ini
+# Ignorar carpeta de secretos
+secrets/

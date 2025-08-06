@@ -3,6 +3,8 @@ import logging
 import requests
 import bcrypt
 import firebase_admin
+import base64
+import json
 from firebase_admin import credentials, auth as firebase_auth
 from fastapi import HTTPException, Request
 from bson import ObjectId
@@ -16,11 +18,34 @@ from models.login import Login
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-cred = credentials.Certificate("secrets/alquiler-secret.json")
-firebase_admin.initialize_app(cred)
-
 load_dotenv()
 coll = get_collection("users")
+
+def initialize_firebase():
+    if firebase_admin.apps:
+        return
+
+    try:
+        firebase_creds_base64 = os.getenv("FIREBASE_CREDENTIALS_BASE64")
+
+        if firebase_creds_base64:
+            firebase_creds_json = base64.b64decode(firebase_creds_base64).decode('utf-8')
+            firebase_creds = json.loads(firebase_creds_json)
+            cred = credentials.Certificate(firebase_creds)
+            firebase_admin.initialize_app(cred)
+            logger.info("Firebase initialized with environment variable credentials")
+
+        else:
+            # Fallback to local file (for local development)
+            cred = credentials.Certificate("secrets/alquiler-secret.json")
+            firebase_admin.initialize_app(cred)
+            logger.info("Firebase initialized with JSON file")
+
+    except Exception as e:
+        logger.error("Failed to initialize Firebase: {e}")
+        raise HTTPException(status_code=500, detail=f"Firebase configuration error: {str(e)}")
+
+initialize_firebase()
 
 # Crear nuevo usuario 
 async def create_user_admin(request: Request, user: UserCreate) -> User:

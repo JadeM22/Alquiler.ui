@@ -5,18 +5,49 @@ from pymongo.server_api import ServerApi
 
 load_dotenv()
 
-DATABASE_NAME = os.getenv("DATABASE_NAME")
-MONGODB_URI = os.getenv("MONGODB_URI")  
 
-def get_collection( col ):
-    client = MongoClient(
-        MONGODB_URI,
-        server_api=ServerApi("1"),
-    
-    )
-    client.admin.command("ping")
-    print("conectado correctamente a MongoDB")  
-    return client[DATABASE_NAME][col]
+# Try both variable names for compatibility
+DB = os.getenv("DATABASE_NAME") or os.getenv("MONGO_DB_NAME")
+URI = os.getenv("MONGODB_URI") or os.getenv("URI")
+
+# Validate that we have the required environment variables
+if not DB:
+    raise ValueError("Database name not found. Set DATABASE_NAME or MONGO_DB_NAME environment variable")
+if not URI:
+    raise ValueError("MongoDB URI not found. Set MONGODB_URI or URI environment variable")
+
+_client = None
+
+
+def get_mongo_client():
+    """Obtiene el cliente MongoDB (lazy loading)"""
+    global _client
+    if _client is None:
+        _client = MongoClient(
+            URI,
+            server_api=ServerApi("1"),
+            tls=True,
+            tlsAllowInvalidCertificates=True,
+            serverSelectionTimeoutMS=5000  # Timeout más corto
+        )
+    return _client
+
+def get_collection(col):
+    """Obtiene una colección de MongoDB"""
+    client = get_mongo_client()
+    return client[DB][col]
+
+
+def t_connection():
+    """Función para probar la conexión (solo cuando sea necesario)"""
+    try:
+        client = get_mongo_client()
+        client.admin.command("ping")
+        return True
+    except Exception as e:
+        print(f"Error connecting to MongoDB: {e}")
+        return False
+
 
 
 

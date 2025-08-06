@@ -22,11 +22,6 @@ class Apartment(BaseModel):
         examples=["A1", "2"]
     )
 
-    photo_url: Optional[str] = Field(
-        description="URL de la foto del apartamento",
-        examples=["https://mi-sitio.com/fotos/apartamento1.jpg"]
-    )
-
     active: bool = Field(
         default=True,
         description="Estado activo del apartamento"
