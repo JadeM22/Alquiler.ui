@@ -41,7 +41,7 @@ jobs:
         FIREBASE_CREDENTIALS_BASE64: ${{ secrets.FIREBASE_CREDENTIALS_BASE64 }}
         RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       run: |
-        python -c "from main import app; print('FASTAPI app imported successfully')"
+        pytest -v test_database.py
     
     - name: Run test
       env:
