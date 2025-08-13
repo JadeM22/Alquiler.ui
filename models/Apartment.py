@@ -27,13 +27,4 @@ class Apartment(BaseModel):
         description="Estado activo del apartamento"
     )
 
-    @field_validator("photo_url")
-    def validate_url(cls, v):
-        if v is None:
-            return v
-        regex = re.compile(
-            r"^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$"
-        )
-        if not regex.match(v):
-            raise ValueError("URL no válida")
-        return v
+    
