@@ -22,7 +22,7 @@ load_dotenv()
 coll = get_collection("users")
 
 def initialize_firebase():
-    if firebase_admin.apps:
+    if firebase_admin._apps:  # Nota el guion bajo
         return
 
     try:
@@ -36,13 +36,12 @@ def initialize_firebase():
             logger.info("Firebase initialized with environment variable credentials")
 
         else:
-            # Fallback to local file (for local development)
             cred = credentials.Certificate("secrets/alquiler-secret.json")
             firebase_admin.initialize_app(cred)
             logger.info("Firebase initialized with JSON file")
 
     except Exception as e:
-        logger.error("Failed to initialize Firebase: {e}")
+        logger.error(f"Failed to initialize Firebase: {e}")
         raise HTTPException(status_code=500, detail=f"Firebase configuration error: {str(e)}")
 
 initialize_firebase()
