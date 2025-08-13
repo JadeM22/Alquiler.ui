@@ -8,10 +8,6 @@ class Contract(BaseModel):
         description="MongoDB ID generado automáticamente desde _id"
     )
 
-    id_User: str = Field(
-        description="ID del usuario dueño del contrato",
-        examples=["507f1f77bcf86cd799439012"]
-    )
 
     id_Apartment: str = Field(
         description="ID del apartamento asociado",

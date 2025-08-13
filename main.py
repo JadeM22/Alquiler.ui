@@ -14,7 +14,17 @@ from routes.user import router as user
 
 load_dotenv()
 
-app = FastAPI(title="Alquiler API")
+app = FastAPI()
+
+# Add CORS
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins for development; restrict in production
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 app.include_router(Apartment)
 app.include_router(contract, tags=["📜 Contracts"])
