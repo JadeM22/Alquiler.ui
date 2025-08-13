@@ -51,18 +51,13 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
+      
       - name: Install Railway CLI
-        run: npm install -g @railway/cli
+        run: curl -sSL https://railway.app/install.sh | sh
+      
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
           echo "starting deployment..."
-          railway up --service "Alquiler-api" || \
-          railway up --service Alquiler-api || \
-          railway up --service web || \
-          railway up --service api || \
-          railway up --service app || \
-          railway up --service Alquiler || \
-          railway up --service backend || \
-          (echo "creating new service and deploying" && railway up)
+          railway up --service "Alquiler.ui"
