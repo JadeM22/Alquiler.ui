@@ -31,7 +31,8 @@ app.include_router(contract, tags=["📜 Contracts"])
 app.include_router(maintenance_type, tags=["🛠️ Maintenance Types"])
 app.include_router(maintenance, tags=["🧰 Maintenance"])
 app.include_router(pay)
-app.include_router(user, tags=["👥 Users"])
+app.include_router(user, prefix="/users", tags=["👥 Users"])
+
 
 @app.get("/")
 def read_root():

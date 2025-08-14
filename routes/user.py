@@ -3,7 +3,7 @@ from utils.security import validateuser, validateadmin
 from models.users import User, UserCreate, UserUpdate
 from models.login import Login
 from controllers.users import (
-    create_user_admin,
+    create_user_public,
     login,
     get_user_by_id_admin,
     update_user_profile
@@ -12,10 +12,10 @@ from controllers.users import (
 router = APIRouter()
 
 
-@router.post("/users", response_model=User)
-@validateadmin
-async def create_user_endpoint(request: Request, user: UserCreate):
-    return await create_user_admin(request, user)
+@router.post("/register", response_model=User)
+async def register_user(user: UserCreate):
+    """Permite que cualquier usuario se registre sin ser admin."""
+    return await create_user_public(user)
 
 
 @router.post("/login")

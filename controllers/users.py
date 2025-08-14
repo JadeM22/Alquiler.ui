@@ -47,21 +47,14 @@ def initialize_firebase():
 initialize_firebase()
 
 # Crear nuevo usuario 
-# controllers/users.py
-
-# Crear nuevo usuario 
-async def create_user_admin(request: Request, user: UserCreate) -> User:
-    """Crea un nuevo usuario (solo administradores) en Firebase y MongoDB."""
+async def create_user_public(user: UserCreate) -> User:
+    """Crea un usuario público (no admin) en Firebase y MongoDB."""
     try:
-        # Verificar permisos de administrador
-        if not getattr(request.state, "admin", False):
-            raise HTTPException(status_code=403, detail="Solo administradores pueden crear usuarios")
-
         # Verificar si el email ya existe
         if coll.find_one({"email": user.email}):
             raise HTTPException(status_code=400, detail="El email ya está registrado")
 
-        # Crear usuario en Firebase y obtener UID
+        # Crear usuario en Firebase
         try:
             firebase_user = firebase_auth.create_user(
                 email=user.email,
@@ -69,37 +62,34 @@ async def create_user_admin(request: Request, user: UserCreate) -> User:
             )
             firebase_uid = firebase_user.uid
         except Exception as e:
-            logger.error(f"Error al crear usuario en Firebase: {e}")
             raise HTTPException(status_code=400, detail=f"Firebase error: {e}")
 
         # Preparar documento para MongoDB (excluyendo id y password)
         user_dict = user.model_dump(exclude={"id", "password"})
         user_dict["firebase_uid"] = firebase_uid
+        user_dict["admin"] = False  # Todos los usuarios públicos no son admin
 
-        # Insertar en MongoDB
         inserted = coll.insert_one(user_dict)
 
-        # Retornar User **sin password**
+        # Retornar User sin password
         return User(
             id=str(inserted.inserted_id),
             full_name=user.full_name,
             email=user.email,
             active=user.active,
-            admin=user.admin
+            admin=False
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error creando usuario: {e}")
         # Si algo falla después de crear el usuario en Firebase, eliminarlo
         if 'firebase_uid' in locals():
             try:
                 firebase_auth.delete_user(firebase_uid)
-            except Exception as ex:
-                logger.warning(f"No se pudo eliminar el usuario de Firebase tras error: {ex}")
+            except Exception:
+                pass
         raise HTTPException(status_code=500, detail=f"Error creando usuario: {e}")
-
 
 # Login de usuario
 async def login(user: Login) -> dict:
