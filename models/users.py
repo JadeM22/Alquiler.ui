@@ -20,10 +20,6 @@ class User(BaseModel):
         examples=["usuario@example.com"]
     )
 
-    id_user_types: str = Field(
-        description="ID del tipo de usuario al que pertenece",
-        examples=["507f1f77bcf86cd799439011"]
-    )
 
     active: bool = Field(
         default=True,
@@ -57,4 +53,3 @@ class UserCreate(User):
     password: str  
 class UserUpdate(User):
     password: Optional[str] = None 
-

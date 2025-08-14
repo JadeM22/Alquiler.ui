@@ -7,7 +7,7 @@ from controllers.Apartment import (
     update_Apartment,
     deactivate_Apartment
 )
-from utils.security import validateadmin
+from utils.security import validateuser
 
 router = APIRouter()
 
@@ -15,7 +15,7 @@ router = APIRouter()
 # Crear un nuevo apartamento (solo administradores)
 # -----------------------
 @router.post("/apartments", response_model=Apartment, tags=["🏢 Apartments"])
-@validateadmin   
+@validateuser 
 async def create_apartment_endpoint(request: Request, apartment: Apartment) -> Apartment:
     return await create_Apartment(apartment)
 
@@ -40,7 +40,7 @@ async def get_apartment_by_id_endpoint(apartment_id: str) -> Apartment:
 # Actualizar un apartamento (solo administradores)
 # -----------------------
 @router.put("/apartments/{apartment_id}", response_model=Apartment, tags=["🏢 Apartments"])
-@validateadmin   
+@validateuser 
 async def update_apartment_endpoint(request: Request, apartment_id: str, apartment: Apartment) -> Apartment:
     return await update_Apartment(apartment_id, apartment)
 
@@ -49,7 +49,7 @@ async def update_apartment_endpoint(request: Request, apartment_id: str, apartme
 # Desactivar o eliminar un apartamento (solo administradores)
 # -----------------------
 @router.delete("/apartments/{apartment_id}", tags=["🏢 Apartments"])
-@validateadmin   
+@validateuser 
 async def deactivate_apartment_endpoint(request: Request, apartment_id: str) -> dict:
     """
     Si el apartamento tiene contratos, cambia su status a 'inactive'.
