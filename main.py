@@ -1,7 +1,11 @@
-import os
 import uvicorn
+import logging
+
 from fastapi import FastAPI, Request
-from dotenv import load_dotenv
+
+from controllers.users import create_user, login
+from models.users import User
+from models.login import Login
 
 from utils.security import validateuser, validateadmin
 
@@ -10,9 +14,6 @@ from routes.contract import router as contract
 from routes.maintenance_type import router as maintenance_type
 from routes.maintenance import router as maintenance
 from routes.pay import router as pay
-from routes.user import router as user
-
-load_dotenv()
 
 app = FastAPI()
 
@@ -31,12 +32,13 @@ app.include_router(contract, tags=["📜 Contracts"])
 app.include_router(maintenance_type, tags=["🛠️ Maintenance Types"])
 app.include_router(maintenance, tags=["🧰 Maintenance"])
 app.include_router(pay)
-app.include_router(user, prefix="/users", tags=["👥 Users"])
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 @app.get("/")
 def read_root():
-    return {"version": "0.0.0"}
+    return {"status": "healthy", "version": "0.0.0", "service": "administracio-Alquiler.api"}
 
 @app.get("/health")
 def health_check():
@@ -44,7 +46,7 @@ def health_check():
         return {
             "status": "healthy",
             "timestamp": "2025-08-06",
-            "service": "alquiler-api",
+            "service": "administracion-Alquiler.api",
             "environment": "production"
         }
     except Exception as e:
@@ -58,25 +60,33 @@ def readiness_check():
         return {
             "status": "ready" if db_status else "not_ready",
             "database": "connected" if db_status else "disconnected",
-            "service": "alquiler-api"
+            "service": "administracion-Alquiler.api"
         }
     except Exception as e:
         return {"status": "not_ready", "error": str(e)}
 
-@app.get("/admin")
+@app.post("/users")
+async def create_user_endpoint(user: User) -> User:
+    return await create_user(user)
+
+@app.post("/login")
+async def login_access(l: Login) -> dict:
+    return await login(l)
+
+@app.get("/exampleadmin")
 @validateadmin
-async def admin_endpoint(request: Request):
+async def example_admin(request: Request):
     return {
-        "message": "Endpoint de administrador",
-        "admin": request.state.admin
+        "message": "This is an example admin endpoint."
+        , "admin": request.state.admin
     }
 
-@app.get("/user")
-@validateuser 
-async def user_info_endpoint(request: Request):
+@app.get("/exampleuser")
+@validateuser
+async def example_user(request: Request):
     return {
-        "message": "Endpoint de usuario",
-        "email": request.state.email
+        "message": "This is an example user endpoint."
+        ,"email": request.state.email
     }
 
 # ----- Configuración para que Swagger tenga botón Authorize -----
