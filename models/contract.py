@@ -9,7 +9,7 @@ class Contract(BaseModel):
     )
 
 
-    id_Apartment: str = Field(
+    id_apartment: str = Field(
         description="ID del apartamento asociado",
         examples=["507f1f77bcf86cd799439012"]
     )

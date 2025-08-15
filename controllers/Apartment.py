@@ -4,15 +4,14 @@ from fastapi import HTTPException
 from bson import ObjectId
 
 from pipelines.apartments_pipelines import (
-    get_apartment_pipeline,
+    get_apartments_pipeline,
     validate_apartment_has_contracts_pipeline
 )
 
 coll = get_collection("apartments")
 
-# -----------------------
+
 # Crear apartamento
-# -----------------------
 async def create_Apartment(apartment: Apartment) -> Apartment:
     try:
         apartment.number = apartment.number.strip().lower()
@@ -29,22 +28,16 @@ async def create_Apartment(apartment: Apartment) -> Apartment:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creating apartment: {str(e)}")
 
-
-# -----------------------
 # Obtener todos los apartamentos
-# -----------------------
 async def get_Apartment() -> list[Apartment]:
     try:
-        pipeline = get_apartment_pipeline()
+        pipeline = get_apartments_pipeline()
         apartments = list(coll.aggregate(pipeline))
         return [Apartment(**doc) for doc in apartments]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching apartments: {str(e)}")
 
-
-# -----------------------
 # Obtener un apartamento por ID
-# -----------------------
 async def get_Apartment_id(apartment_id: str) -> Apartment:
     try:
         doc = coll.find_one({"_id": ObjectId(apartment_id)})
@@ -57,10 +50,7 @@ async def get_Apartment_id(apartment_id: str) -> Apartment:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching apartment: {str(e)}")
 
-
-# -----------------------
 # Actualizar un apartamento
-# -----------------------
 async def update_Apartment(apartment_id: str, apartment: Apartment) -> Apartment:
     try:
         apartment.number = apartment.number.strip().lower()
@@ -83,27 +73,53 @@ async def update_Apartment(apartment_id: str, apartment: Apartment) -> Apartment
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating apartment: {str(e)}")
 
-
-# -----------------------
 # Desactivar o eliminar un apartamento
-# -----------------------
-async def deactivate_Apartment(apartment_id: str) -> dict:
+async def delete_or_deactivate_apartment(apartment_id: str) -> dict:
+    """Desactiva si tiene contratos, elimina si no."""
     try:
         pipeline = validate_apartment_has_contracts_pipeline(apartment_id)
-        assigned = list(coll.aggregate(pipeline))
+        result = list(coll.aggregate(pipeline))
 
-        if assigned is None or len(assigned) == 0:
-            raise HTTPException(status_code=404, detail="Apartment not found")
+        if not result:
+            raise HTTPException(status_code=404, detail="Apartamento no encontrado")
 
-        if assigned[0]["number_of_contracts"] > 0:
+        apartment_info = result[0]
+
+        if apartment_info["number_of_contracts"] > 0:
             coll.update_one(
                 {"_id": ObjectId(apartment_id)},
                 {"$set": {"status": "inactive"}}
             )
-            return {"message": "Apartment has contracts and has been deactivated"}
+            return {"message": "Apartamento tiene contratos y ha sido desactivado"}
         else:
             coll.delete_one({"_id": ObjectId(apartment_id)})
-            return {"message": "Apartment deleted successfully"}
+            return {"message": "Apartamento eliminado exitosamente"}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error deactivating apartment: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al procesar el apartamento: {e}"
+        )
+
+# Alternar estado del apartamento
+async def toggle_apartment_status(apartment_id: str, status: dict) -> dict:
+    try:
+        new_status = status.get("status")
+        if new_status not in ["active", "inactive"]:
+            raise HTTPException(status_code=400, detail="Estado inválido")
+
+        result = coll.update_one(
+            {"_id": ObjectId(apartment_id)},
+            {"$set": {"status": new_status}}
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Apartamento no encontrado")
+
+        # Obtener el apartamento completo después de actualizar
+        updated_apartment = coll.find_one({"_id": ObjectId(apartment_id)})
+        updated_apartment["id"] = str(updated_apartment["_id"])
+        del updated_apartment["_id"]
+
+        return updated_apartment
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al alternar estado: {str(e)}")

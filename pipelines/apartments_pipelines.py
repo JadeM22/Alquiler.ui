@@ -1,11 +1,10 @@
 from bson import ObjectId
 
-def get_apartment_pipeline() -> list:
+def get_apartments_pipeline() -> list:
+    """Pipeline para obtener apartamentos con la cantidad de contratos"""
     return [
         {
-            "$addFields": {
-                "id": {"$toString": "$_id"}
-            }
+            "$addFields": {"id": {"$toString": "$_id"}}
         },
         {
             "$lookup": {
@@ -16,42 +15,27 @@ def get_apartment_pipeline() -> list:
             }
         },
         {
-            "$group": {
-                "_id": {
-                    "id": "$id",
-                    "number": "$number",
-                    "level": "$level",
-                    "status": "$status"
-                },
-                "contracts": {
-                    "$sum": {"$size": "$contracts_list"}
-                }
+            "$addFields": {
+                "number_of_contracts": {"$size": "$contracts_list"}
             }
         },
         {
             "$project": {
                 "_id": 0,
-                "id": "$_id.id",
-                "number": "$_id.number",
-                "level": "$_id.level",
-                "status": "$_id.status",
-                "contracts": 1
+                "id": 1,
+                "number": 1,
+                "level": 1,
+                "status": 1,
+                "number_of_contracts": 1
             }
         }
     ]
 
-def validate_apartment_has_contracts_pipeline(id: str) -> list:
+def validate_apartment_has_contracts_pipeline(apartment_id: str) -> list:
+    """Pipeline para validar si un apartamento tiene contratos"""
     return [
-        {
-            "$match": {
-                "_id": ObjectId(id)
-            }
-        },
-        {
-            "$addFields": {
-                "id": {"$toString": "$_id"}
-            }
-        },
+        {"$match": {"_id": ObjectId(apartment_id)}},
+        {"$addFields": {"id": {"$toString": "$_id"}}},
         {
             "$lookup": {
                 "from": "contracts",
@@ -61,26 +45,13 @@ def validate_apartment_has_contracts_pipeline(id: str) -> list:
             }
         },
         {
-            "$group": {
-                "_id": {
-                    "id": "$id",
-                    "number": "$number",
-                    "level": "$level",
-                    "status": "$status"
-                },
-                "contracts": {
-                    "$sum": {"$size": "$contracts_list"}
-                }
-            }
-        },
-        {
             "$project": {
                 "_id": 0,
-                "id": "$_id.id",
-                "number": "$_id.number",
-                "level": "$_id.level",
-                "status": "$_id.status",
-                "contracts": 1
+                "id": 1,
+                "number": 1,
+                "level": 1,
+                "status": 1,
+                "number_of_contracts": {"$size": "$contracts_list"}
             }
         }
     ]

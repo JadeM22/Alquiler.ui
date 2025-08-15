@@ -22,7 +22,7 @@ def get_contract_with_apartment_pipeline(contract_id: str) -> list:
         {"$project": {
             "id": {"$toString": "$_id"},
             "id_user": {"$toString": "$id_user"},
-            "tipo": "$apartment.number",  # Número del apartamento
+            "tipo": "$apartment.number",  
             "start_date": "$start_date",
             "end_date": "$end_date",
             "status": "$status"
@@ -120,4 +120,39 @@ def search_contracts_pipeline(search_term: str, skip: int = 0, limit: int = 10) 
         }},
         {"$skip": skip},
         {"$limit": limit}
+    ]
+
+
+def get_contracts_pipeline():
+    return [
+        {
+            "$lookup": {
+                "from": "apartments",
+                "localField": "apartment_id",
+                "foreignField": "_id",
+                "as": "apartment_info"
+            }
+        },
+        {
+            "$unwind": {
+                "path": "$apartment_info",
+                "preserveNullAndEmptyArrays": True
+            }
+        },
+        {
+            "$project": {
+                "id": {"$toString": "$_id"},
+                "apartment_id": 1,
+                "apartment": {
+                    "id": {"$toString": "$apartment_info._id"},
+                    "number": "$apartment_info.number",
+                    "level": "$apartment_info.level",
+                    "status": "$apartment_info.status"
+                },
+                "tenant": 1,
+                "start_date": 1,
+                "end_date": 1,
+                "active": 1
+            }
+        }
     ]
